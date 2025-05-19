@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "sstream": "cpp",
+        "stop_token": "cpp"
+    }
+}
