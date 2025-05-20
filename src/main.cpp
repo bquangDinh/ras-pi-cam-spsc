@@ -40,6 +40,11 @@ SPSCQueue<int> queue(QUEUE_SIZE);
 // Flag to control the running state of the program
 std::atomic<bool> running(true);
 
+/**
+ * @brief Function to get the next frame index in a circular manner
+ * @param current The current frame index
+ * @return The next frame index
+ */
 inline int nextFrameIndex(int current)
 {
     return (current + 1) % QUEUE_SIZE; // Circular buffer
@@ -74,6 +79,10 @@ void frameCaptureThread(VideoCapture &cap)
     LOG("Frame capture thread finished.");
 }
 
+/**
+ * @brief Signal handler to handle interrupts (Ctrl+C)
+ * @param signum The signal number
+ */
 void signalHandler(int signum)
 {
     LOG("Signal received: " << signum);
@@ -92,7 +101,10 @@ int main()
 
     // Set up interrupt signal handler
     signal(SIGINT, signalHandler); // Handle Ctrl+C
+    signal(SIGTERM, signalHandler); // Handle termination signal
 
+    // Use MJPG codec for video capture
+    // MJPG is compressed, so it should be faster than raw YUYV
     cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M','J','P','G'));
 
     cap.set(CAP_PROP_FRAME_WIDTH, FRAME_WIDTH); // Set frame width
@@ -103,6 +115,7 @@ int main()
 
     namedWindow(WINDOW_NAME, WINDOW_NORMAL); // Create a window
 
+    // Set window properties
     resizeWindow(WINDOW_NAME, FRAME_WIDTH, FRAME_HEIGHT);
 
     setWindowProperty(WINDOW_NAME, WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);
@@ -162,6 +175,10 @@ int main()
     cap.release(); // Release the camera
 
     destroyAllWindows(); // Close all OpenCV windows
+
+    queue.~SPSCQueue(); // Destroy the queue
+    
+    LOG("Camera feed stopped.");
 
     return 0;
 }
